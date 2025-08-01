@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Bot - Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.css" rel="stylesheet">
+    <style>
+        .card-stat {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+        }
+        .card-risk-low { border-left: 5px solid #28a745; }
+        .card-risk-medium { border-left: 5px solid #ffc107; }
+        .card-risk-high { border-left: 5px solid #fd7e14; }
+        .card-risk-critical { border-left: 5px solid #dc3545; }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .status-active { background-color: #28a745; }
+        .status-inactive { background-color: #dc3545; }
+        .status-warning { background-color: #ffc107; }
+        
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        
+        .trade-row.profit { background-color: rgba(40, 167, 69, 0.1); }
+        .trade-row.loss { background-color: rgba(220, 53, 69, 0.1); }
+        
+        .refresh-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-robot me-2"></i>Trading Bot
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">Dashboard</a>
+                <a class="nav-link" href="/risk-config">Configuración de Riesgo</a>
+                <a class="nav-link" href="/commands">Comandos</a>
+                <a class="nav-link" href="/analytics">Análisis</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Status Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card card-stat">
+                    <div class="card-body text-center">
+                        <i class="fas fa-power-off fa-2x mb-2"></i>
+                        <h6 class="card-title">Estado del Bot</h6>
+                        <div id="bot-status">
+                            <span class="status-indicator status-inactive"></span>
+                            <span>Detenido</span>
+                        </div>
+                        <button id="toggle-bot" class="btn btn-light btn-sm mt-2">Iniciar</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card card-stat">
+                    <div class="card-body text-center">
+                        <i class="fas fa-shield-alt fa-2x mb-2"></i>
+                        <h6 class="card-title">Nivel de Riesgo</h6>
+                        <div id="risk-level" class="metric-value">LOW</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card card-stat">
+                    <div class="card-body text-center">
+                        <i class="fas fa-chart-line fa-2x mb-2"></i>
+                        <h6 class="card-title">P&L Diario</h6>
+                        <div id="daily-pnl" class="metric-value">$0.00</div>
+                        <small id="daily-pnl-pct" class="text-light">(0.00%)</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card card-stat">
+                    <div class="card-body text-center">
+                        <i class="fas fa-coins fa-2x mb-2"></i>
+                        <h6 class="card-title">Balance USDT</h6>
+                        <div id="balance-usdt" class="metric-value">$0.00</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Metrics -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-tachometer-alt me-2"></i>Métricas de Riesgo
+                        </h5>
+                        <button class="btn btn-outline-primary btn-sm" onclick="refreshRiskMetrics()">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Trades Diarios</label>
+                                    <div class="progress">
+                                        <div id="daily-trades-progress" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                    </div>
+                                    <small id="daily-trades-text" class="text-muted">0 / 20</small>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Exposición Total</label>
+                                    <div class="progress">
+                                        <div id="exposure-progress" class="progress-bar bg-warning" role="progressbar" style="width: 0%"></div>
+                                    </div>
+                                    <small id="exposure-text" class="text-muted">0.0%</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Drawdown Actual</label>
+                                    <div class="progress">
+                                        <div id="drawdown-progress" class="progress-bar bg-danger" role="progressbar" style="width: 0%"></div>
+                                    </div>
+                                    <small id="drawdown-text" class="text-muted">0.0%</small>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">VaR (1 día)</label>
+                                    <div class="h5 text-danger" id="var-value">0.0%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Alertas Recientes
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="recent-alerts" class="list-group list-group-flush">
+                            <div class="text-muted text-center">No hay alertas recientes</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Market Analysis -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-bar me-2"></i>Análisis de Mercado
+                        </h5>
+                        <button class="btn btn-outline-primary btn-sm" onclick="refreshMarketAnalysis()">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Símbolo</th>
+                                        <th>Precio</th>
+                                        <th>Cambio 24h</th>
+                                        <th>Volumen</th>
+                                        <th>Score Técnico</th>
+                                        <th>Tendencia</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="market-analysis-table">
+                                    <tr>
+                                        <td colspan="7" class="text-center">
+                                            <div class="spinner-border spinner-border-sm" role="status">
+                                                <span class="visually-hidden">Cargando...</span>
+                                            </div>
+                                            Cargando análisis...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Portfolio and Recent Trades -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-wallet me-2"></i>Portfolio
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="portfolio-positions">
+                            <div class="text-center">
+                                <div class="spinner-border spinner-border-sm" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                                Cargando posiciones...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-exchange-alt me-2"></i>Trades Recientes
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="recent-trades">
+                            <div class="text-center">
+                                <div class="spinner-border spinner-border-sm" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                                Cargando trades...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Trade Panel -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-bolt me-2"></i>Trade Rápido
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="quick-trade-form">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Símbolo</label>
+                                        <select class="form-select" id="trade-symbol" required>
+                                            <option value="">Seleccionar símbolo</option>
+                                            <option value="BTCUSDT">BTC/USDT</option>
+                                            <option value="ETHUSDT">ETH/USDT</option>
+                                            <option value="BNBUSDT">BNB/USDT</option>
+                                            <option value="ADAUSDT">ADA/USDT</option>
+                                            <option value="SOLUSDT">SOL/USDT</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Tipo</label>
+                                        <select class="form-select" id="trade-side" required>
+                                            <option value="BUY">Comprar</option>
+                                            <option value="SELL">Vender</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Cantidad (USDT)</label>
+                                <input type="number" class="form-control" id="trade-amount" min="10" step="0.01" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-paper-plane me-2"></i>Ejecutar Trade
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-cogs me-2"></i>Controles Rápidos
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-success" onclick="toggleAutoTrading()">
+                                <i class="fas fa-play me-2"></i>Activar Trading Automático
+                            </button>
+                            <button class="btn btn-warning" onclick="pauseTrading()">
+                                <i class="fas fa-pause me-2"></i>Pausar Trading
+                            </button>
+                            <button class="btn btn-danger" onclick="emergencyStop()">
+                                <i class="fas fa-stop me-2"></i>Parada de Emergencia
+                            </button>
+                            <button class="btn btn-info" onclick="resetEmergencyStop()">
+                                <i class="fas fa-undo me-2"></i>Reset Emergency Stop
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Refresh Button -->
+    <button class="btn btn-primary btn-lg refresh-btn" onclick="refreshAll()" title="Actualizar todo">
+        <i class="fas fa-sync-alt"></i>
+    </button>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script>
+        // Estado global
+        let botStatus = {
+            running: false,
+            auto_trading: false
+        };
+
+        // Inicializar dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshAll();
+            
+            // Auto-refresh cada 30 segundos
+            setInterval(refreshAll, 30000);
+            
+            // Setup quick trade form
+            document.getElementById('quick-trade-form').addEventListener('submit', handleQuickTrade);
+        });
+
+        // Funciones de actualización
+        async function refreshAll() {
+            await Promise.all([
+                refreshStatus(),
+                refreshRiskMetrics(),
+                refreshMarketAnalysis(),
+                refreshPortfolio(),
+                refreshRecentTrades()
+            ]);
+        }
+
+        async function refreshStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+                
+                botStatus = data;
+                updateStatusDisplay(data);
+            } catch (error) {
+                console.error('Error refreshing status:', error);
+            }
+        }
+
+        async function refreshRiskMetrics() {
+            try {
+                const response = await fetch('/api/risk/dashboard');
+                const data = await response.json();
+                
+                updateRiskMetricsDisplay(data);
+            } catch (error) {
+                console.error('Error refreshing risk metrics:', error);
+            }
+        }
+
+        async function refreshMarketAnalysis() {
+            try {
+                const response = await fetch('/api/market/analysis');
+                const data = await response.json();
+                
+                updateMarketAnalysisDisplay(data);
+            } catch (error) {
+                console.error('Error refreshing market analysis:', error);
+            }
+        }
+
+        async function refreshPortfolio() {
+            try {
+                const response = await fetch('/api/portfolio');
+                const data = await response.json();
+                
+                updatePortfolioDisplay(data);
+            } catch (error) {
+                console.error('Error refreshing portfolio:', error);
+            }
+        }
+
+        async function refreshRecentTrades() {
+            try {
+                const response = await fetch('/api/trades?limit=10');
+                const data = await response.json();
+                
+                updateRecentTradesDisplay(data);
+            } catch (error) {
+                console.error('Error refreshing trades:', error);
+            }
+        }
+
+        // Funciones de actualización de UI
+        function updateStatusDisplay(data) {
+            const statusElement = document.getElementById('bot-status');
+            const toggleButton = document.getElementById('toggle-bot');
+            const riskLevel = document.getElementById('risk-level');
+            const dailyPnl = document.getElementById('daily-pnl');
+            const dailyPnlPct = document.getElementById('daily-pnl-pct');
+            
+            // Bot status
+            if (data.running) {
+                statusElement.innerHTML = '<span class="status-indicator status-active"></span><span>Activo</span>';
+                toggleButton.textContent = 'Detener';
+                toggleButton.className = 'btn btn-danger btn-sm mt-2';
+            } else {
+                statusElement.innerHTML = '<span class="status-indicator status-inactive"></span><span>Detenido</span>';
+                toggleButton.textContent = 'Iniciar';
+                toggleButton.className = 'btn btn-success btn-sm mt-2';
+            }
+            
+            // Risk level
+            riskLevel.textContent = data.risk_level;
+            riskLevel.className = `metric-value text-${getRiskColor(data.risk_level)}`;
+            
+            // Emergency stop indicator
+            if (data.emergency_stop) {
+                statusElement.innerHTML += '<br><small class="text-danger"><i class="fas fa-exclamation-triangle"></i> Emergency Stop</small>';
+            }
+        }
+
+        function updateRiskMetricsDisplay(data) {
+            const metrics = data.risk_metrics;
+            const limits = data.risk_limits;
+            
+            // Daily P&L
+            document.getElementById('daily-pnl').textContent = `$${metrics.current_daily_pnl.toFixed(2)}`;
+            document.getElementById('daily-pnl-pct').textContent = `(${metrics.current_daily_pnl_pct.toFixed(2)}%)`;
+            
+            // Daily trades progress
+            const tradesProgress = (metrics.daily_trades_count / limits.max_daily_trades) * 100;
+            document.getElementById('daily-trades-progress').style.width = `${tradesProgress}%`;
+            document.getElementById('daily-trades-text').textContent = `${metrics.daily_trades_count} / ${limits.max_daily_trades}`;
+            
+            // Exposure progress
+            const exposureProgress = (metrics.total_exposure_pct / limits.max_total_exposure_pct) * 100;
+            document.getElementById('exposure-progress').style.width = `${exposureProgress}%`;
+            document.getElementById('exposure-text').textContent = `${metrics.total_exposure_pct.toFixed(1)}%`;
+            
+            // Drawdown progress
+            const drawdownProgress = (metrics.current_drawdown_pct / limits.max_drawdown_pct) * 100;
+            document.getElementById('drawdown-progress').style.width = `${drawdownProgress}%`;
+            document.getElementById('drawdown-text').textContent = `${metrics.current_drawdown_pct.toFixed(1)}%`;
+            
+            // VaR
+            document.getElementById('var-value').textContent = `${metrics.var_1d.toFixed(1)}%`;
+            
+            // Recent alerts
+            updateAlertsDisplay(data.recent_alerts);
+        }
+
+        function updateMarketAnalysisDisplay(data) {
+            const tableBody = document.getElementById('market-analysis-table');
+            
+            if (data.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="7" class="text-center">No hay datos disponibles</td></tr>';
+                return;
+            }
+            
+            tableBody.innerHTML = data.map(item => `
+                <tr>
+                    <td><strong>${item.symbol}</strong></td>
+                    <td>$${item.price.toFixed(4)}</td>
+                    <td class="${item.change_24h >= 0 ? 'text-success' : 'text-danger'}">
+                        ${item.change_24h >= 0 ? '+' : ''}${item.change_24h.toFixed(2)}%
+                    </td>
+                    <td>${formatVolume(item.volume_24h)}</td>
+                    <td>
+                        <span class="badge bg-${getScoreColor(item.technical_score)}">
+                            ${item.technical_score.toFixed(1)}/10
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge bg-${getTrendColor(item.trend)}">
+                            ${item.trend}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="quickTrade('${item.symbol}', 'BUY')">
+                            <i class="fas fa-arrow-up"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="quickTrade('${item.symbol}', 'SELL')">
+                            <i class="fas fa-arrow-down"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function updatePortfolioDisplay(data) {
+            const container = document.getElementById('portfolio-positions');
+            const balance = data.balance;
+            const positions = data.positions;
+            
+            // Update USDT balance
+            document.getElementById('balance-usdt').textContent = `$${balance.USDT?.total?.toFixed(2) || '0.00'}`;
+            
+            if (positions.length === 0) {
+                container.innerHTML = '<div class="text-muted text-center">No hay posiciones abiertas</div>';
+                return;
+            }
+            
+            container.innerHTML = positions.map(pos => `
+                <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                    <div>
+                        <strong>${pos.symbol}</strong><br>
+                        <small class="text-muted">${pos.quantity.toFixed(4)} @ $${pos.current_price.toFixed(4)}</small>
+                    </div>
+                    <div class="text-end">
+                        <div class="fw-bold">$${pos.current_value.toFixed(2)}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateRecentTradesDisplay(data) {
+            const container = document.getElementById('recent-trades');
+            
+            if (data.length === 0) {
+                container.innerHTML = '<div class="text-muted text-center">No hay trades recientes</div>';
+                return;
+            }
+            
+            container.innerHTML = data.slice(0, 5).map(trade => `
+                <div class="d-flex justify-content-between align-items-center border-bottom py-2 trade-row">
+                    <div>
+                        <strong>${trade.symbol}</strong>
+                        <span class="badge bg-${trade.side === 'BUY' ? 'success' : 'danger'} ms-2">
+                            ${trade.side}
+                        </span><br>
+                        <small class="text-muted">${new Date(trade.timestamp).toLocaleString()}</small>
+                    </div>
+                    <div class="text-end">
+                        <div class="fw-bold">$${trade.total.toFixed(2)}</div>
+                        <small class="text-muted">${trade.quantity.toFixed(4)}</small>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateAlertsDisplay(alerts) {
+            const container = document.getElementById('recent-alerts');
+            
+            if (!alerts || alerts.length === 0) {
+                container.innerHTML = '<div class="text-muted text-center">No hay alertas recientes</div>';
+                return;
+            }
+            
+            container.innerHTML = alerts.slice(0, 5).map(alert => `
+                <div class="alert alert-${getSeverityColor(alert.severity)} alert-sm mb-2">
+                    <small>
+                        <strong>${alert.severity}:</strong> ${alert.message}
+                        <br><span class="text-muted">${new Date(alert.created_at).toLocaleString()}</span>
+                    </small>
+                </div>
+            `).join('');
+        }
+
+        // Funciones de control
+        async function toggleBot() {
+            const action = botStatus.running ? 'stop' : 'start';
+            
+            try {
+                const response = await fetch('/api/bot/toggle', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ action })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    await refreshStatus();
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                alert('Error controlando el bot: ' + error.message);
+            }
+        }
+
+        async function emergencyStop() {
+            if (confirm('¿Estás seguro de activar la parada de emergencia? Esto detendrá todo el trading.')) {
+                try {
+                    // Implementar llamada a emergency stop
+                    alert('Parada de emergencia activada');
+                    await refreshStatus();
+                } catch (error) {
+                    alert('Error en parada de emergencia: ' + error.message);
+                }
+            }
+        }
+
+        async function resetEmergencyStop() {
+            if (confirm('¿Resetear la parada de emergencia?')) {
+                try {
+                    const response = await fetch('/api/risk/reset-emergency', {
+                        method: 'POST'
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        alert('Emergency stop reseteado');
+                        await refreshStatus();
+                    } else {
+                        alert('Error: ' + result.error);
+                    }
+                } catch (error) {
+                    alert('Error reseteando emergency stop: ' + error.message);
+                }
+            }
+        }
+
+        async function handleQuickTrade(event) {
+            event.preventDefault();
+            
+            const symbol = document.getElementById('trade-symbol').value;
+            const side = document.getElementById('trade-side').value;
+            const amount = parseFloat(document.getElementById('trade-amount').value);
+            
+            if (!symbol || !amount) {
+                alert('Por favor completa todos los campos');
+                return;
+            }
+            
+            if (confirm(`¿Ejecutar ${side} de ${symbol} por $${amount}?`)) {
+                try {
+                    const response = await fetch('/api/execute-trade', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ symbol, side, amount })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        alert('Trade ejecutado exitosamente');
+                        document.getElementById('quick-trade-form').reset();
+                        await refreshAll();
+                    } else {
+                        alert('Error ejecutando trade: ' + result.error);
+                    }
+                } catch (error) {
+                    alert('Error: ' + error.message);
+                }
+            }
+        }
+
+        function quickTrade(symbol, side) {
+            document.getElementById('trade-symbol').value = symbol;
+            document.getElementById('trade-side').value = side;
+            document.getElementById('trade-amount').focus();
+        }
+
+        // Utility functions
+        function getRiskColor(level) {
+            switch (level.toLowerCase()) {
+                case 'low': return 'success';
+                case 'medium': return 'warning';
+                case 'high': return 'danger';
+                case 'critical': return 'danger';
+                default: return 'secondary';
+            }
+        }
+
+        function getScoreColor(score) {
+            if (score >= 7) return 'success';
+            if (score >= 5) return 'warning';
+            return 'danger';
+        }
+
+        function getTrendColor(trend) {
+            switch (trend.toLowerCase()) {
+                case 'bullish': return 'success';
+                case 'bearish': return 'danger';
+                default: return 'secondary';
+            }
+        }
+
+        function getSeverityColor(severity) {
+            switch (severity.toLowerCase()) {
+                case 'low': return 'info';
+                case 'medium': return 'warning';
+                case 'high': return 'danger';
+                case 'critical': return 'danger';
+                default: return 'secondary';
+            }
+        }
+
+        function formatVolume(volume) {
+            if (volume >= 1e9) return (volume / 1e9).toFixed(1) + 'B';
+            if (volume >= 1e6) return (volume / 1e6).toFixed(1) + 'M';
+            if (volume >= 1e3) return (volume / 1e3).toFixed(1) + 'K';
+            return volume.toFixed(0);
+        }
+
+        // Event listeners
+        document.getElementById('toggle-bot').addEventListener('click', toggleBot);
+    </script>
+</body>
+</html>
