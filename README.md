@@ -1,351 +1,313 @@
 # 🤖 Bot de Trading de Criptomonedas
 
-Un bot de trading inteligente controlado por Telegram que utiliza análisis técnico e inteligencia artificial para operar en Binance con el objetivo de obtener un 30% de ganancia semanal.
+Bot completo de trading automatizado con controles avanzados de riesgo, comandos personalizables e interfaz web interactiva. Diseñado especialmente para funcionar en **Google Colab**.
 
-## ✨ Características
+## 🚀 Características Principales
 
-- 🤖 **Control por Telegram**: Controla completamente el bot desde Telegram
-- 📊 **Análisis Técnico Automático**: RSI, MACD, Bollinger Bands, medias móviles y más
-- 🧠 **Asesoramiento con IA**: Integración con LLMs gratuitos (Groq, Ollama)
-- 💰 **Objetivo Ambicioso**: 30% de ganancia semanal con gestión de riesgo
-- ⚡ **Trading Automático**: Ejecuta trades basados en señales técnicas y IA
-- 🛡️ **Gestión de Riesgo**: Stop-loss, take-profit y límites de exposición
-- 📈 **Monitoreo en Tiempo Real**: Seguimiento de posiciones y rendimiento
-- 🗄️ **Base de Datos**: Almacena historial de trades y estadísticas
+### 📊 Control Avanzado de Riesgo
+- **Límites dinámicos**: Pérdida/ganancia máxima diaria configurable
+- **Circuit breakers**: Parada automática en condiciones extremas
+- **Gestión de exposición**: Control de posiciones y correlaciones
+- **Métricas avanzadas**: VaR, Sharpe Ratio, Drawdown, etc.
 
-## 🚀 Instalación Rápida
+### 🤖 Comandos Inteligentes
+- **Comandos personalizables**: Crea tus propios comandos via regex
+- **Plantillas predefinidas**: Compra rápida, stop loss, alertas de precio
+- **Integración con LLMs**: Groq, OpenAI, Ollama para análisis IA
+- **Control por Telegram**: Interfaz completa via bot de Telegram
 
-### 1. Clonar el Repositorio
-```bash
-git clone <repository-url>
-cd crypto-trading-bot
-```
+### 🌐 Interfaz Web Interactiva
+- **Dashboard en tiempo real**: Métricas, gráficos y estado del bot
+- **Configuración visual**: Sliders para ajustar parámetros de riesgo
+- **Análisis de mercado**: Indicadores técnicos y señales automáticas
+- **Gestión de portfolio**: Visualización de posiciones y rendimiento
 
-### 2. Instalar Dependencias
-```bash
-pip install -r requirements.txt
-```
+### 📈 Análisis Técnico Automático
+- **Indicadores múltiples**: RSI, MACD, Bollinger Bands, SMA/EMA
+- **Scoring inteligente**: Puntuación automática de oportunidades
+- **Integración con IA**: Análisis mejorado con modelos de lenguaje
+- **Backtesting**: Simulación histórica de estrategias
 
-### 3. Configurar Variables de Entorno
-```bash
-cp .env.example .env
-```
+## 🛠️ Instalación y Configuración
 
-Edita el archivo `.env` con tus credenciales:
+### Para Google Colab (Recomendado)
 
-```env
-# Telegram Bot
-TELEGRAM_BOT_TOKEN=tu_token_de_telegram
-TELEGRAM_CHAT_ID=tu_chat_id
-
-# Binance API (¡Usa TESTNET para pruebas!)
-BINANCE_API_KEY=tu_api_key_de_binance
-BINANCE_SECRET_KEY=tu_secret_key_de_binance
-BINANCE_TESTNET=True
-
-# LLM (elige uno)
-GROQ_API_KEY=tu_api_key_de_groq
-```
-
-### 4. Ejecutar el Bot
-```bash
-python main.py
-```
-
-## 🔧 Configuración Detallada
-
-### Telegram Bot
-
-1. Crear bot con [@BotFather](https://t.me/botfather)
-2. Obtener el token del bot
-3. Obtener tu Chat ID enviando un mensaje al bot y visitando:
-   ```
-   https://api.telegram.org/bot<TOKEN>/getUpdates
+1. **Abrir Google Colab**
+   ```python
+   # Clonar el repositorio
+   !git clone https://github.com/tu-usuario/trading-bot.git
+   %cd trading-bot
+   
+   # Ejecutar el bot
+   from main_colab import colab_start
+   bot_manager, public_url = colab_start()
    ```
 
-### Binance API
+2. **Configurar Credenciales**
+   - El bot creará automáticamente un archivo `.env`
+   - Edita las credenciales necesarias:
+     ```bash
+     TELEGRAM_BOT_TOKEN=tu_token_aqui
+     BINANCE_API_KEY=tu_api_key_aqui
+     BINANCE_SECRET_KEY=tu_secret_key_aqui
+     GROQ_API_KEY=tu_groq_key_aqui  # Opcional
+     ```
 
-1. Registrarse en [Binance](https://binance.com)
-2. Crear API Key en la configuración de la cuenta
-3. **IMPORTANTE**: Usar Binance Testnet para pruebas:
-   - [Testnet](https://testnet.binance.vision/)
-   - Configurar `BINANCE_TESTNET=True`
+3. **Acceder a la Interfaz Web**
+   - El bot mostrará una URL pública de ngrok
+   - Usa esta URL para acceder al dashboard
 
-### LLMs Gratuitos
+### Para Instalación Local
 
-#### Groq (Recomendado)
-- Registrarse en [Groq](https://console.groq.com)
-- Obtener API key gratuita
-- Límite: ~6000 tokens/minuto
+1. **Clonar el repositorio**
+   ```bash
+   git clone https://github.com/tu-usuario/trading-bot.git
+   cd trading-bot
+   ```
 
-#### Ollama (Local)
-```bash
-# Instalar Ollama
-curl -fsSL https://ollama.ai/install.sh | sh
+2. **Instalar dependencias**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-# Descargar modelo
-ollama pull llama2
-```
+3. **Configurar variables de entorno**
+   ```bash
+   cp .env.example .env
+   # Editar .env con tus credenciales
+   ```
 
-## 📱 Comandos de Telegram
+4. **Ejecutar el bot**
+   ```bash
+   python main_colab.py
+   ```
 
-### Comandos Básicos
+## 🔑 Configuración de APIs
+
+### 1. Telegram Bot
+
+1. Habla con [@BotFather](https://t.me/botfather) en Telegram
+2. Crea un nuevo bot: `/newbot`
+3. Copia el token del bot
+4. Obtén tu Chat ID:
+   - Envía un mensaje a tu bot
+   - Ve a: `https://api.telegram.org/bot<TOKEN>/getUpdates`
+   - Copia el `chat.id`
+
+### 2. Binance API
+
+⚠️ **IMPORTANTE**: Usa siempre Testnet para pruebas
+
+**Testnet (Recomendado para pruebas):**
+1. Ve a [Binance Testnet](https://testnet.binance.vision/)
+2. Inicia sesión con tu cuenta de Binance
+3. Crea una API Key
+4. Configura `BINANCE_TESTNET=True`
+
+**Mainnet (Solo para trading real):**
+1. Ve a [Binance API Management](https://www.binance.com/en/my/settings/api-management)
+2. Crea una nueva API Key
+3. Habilita "Spot & Margin Trading"
+4. Configura `BINANCE_TESTNET=False`
+
+### 3. LLM APIs (Opcional)
+
+**Groq (Gratuito con límites):**
+1. Ve a [Groq Console](https://console.groq.com/)
+2. Crea una cuenta gratuita
+3. Genera una API Key
+4. Configura `GROQ_API_KEY`
+
+**OpenAI (De pago):**
+1. Ve a [OpenAI API](https://openai.com/api/)
+2. Crea una cuenta y agrega créditos
+3. Genera una API Key
+4. Configura `OPENAI_API_KEY`
+
+**Ollama (Local, gratuito):**
+1. Instala [Ollama](https://ollama.ai/)
+2. Descarga un modelo: `ollama pull llama2`
+3. Configura `OLLAMA_BASE_URL=http://localhost:11434`
+
+## 📱 Uso del Bot
+
+### Comandos de Telegram
+
+**Comandos básicos:**
 - `/start` - Iniciar el bot
-- `/ayuda` - Ver todos los comandos
-- `/status` - Estado del bot y balance
-- `/analizar` - Analizar mercado actual
-
-### Trading
-- `/comprar BTCUSDT` - Comprar criptomoneda
-- `/vender BTCUSDT` - Vender criptomoneda
+- `/status` - Ver estado y balance
+- `/analizar` - Analizar mercado
 - `/balance` - Ver balance actual
+- `/help` - Mostrar ayuda
+
+**Comandos de trading:**
+- `/comprar BTCUSDT` - Comprar Bitcoin
+- `/vender BTCUSDT` - Vender Bitcoin
 - `/posiciones` - Ver posiciones abiertas
 
-### Control Automático
-- `/activar` - Activar trading automático
-- `/desactivar` - Desactivar trading automático
-
-### Palabras Clave
-También puedes usar texto natural:
-- `comprar btc` - Comprar Bitcoin
-- `vender eth` - Vender Ethereum
+**Comandos por texto natural:**
+- `comprar btc 100` - Comprar $100 de Bitcoin
+- `vender eth` - Vender todo Ethereum
+- `precio btc` - Ver precio de Bitcoin
 - `analizar sol` - Analizar Solana
-- `precio ada` - Ver precio de Cardano
 
-## 🎯 Estrategia de Trading
+### Interfaz Web
 
-### Objetivo
-- **Meta**: 30% ganancia semanal
-- **Riesgo por trade**: Máximo 2% del capital
-- **Stop Loss**: 5% por defecto
-- **Take Profit**: 10% por defecto
+**Dashboard Principal (`/`):**
+- Estado del bot en tiempo real
+- Métricas de riesgo y P&L
+- Análisis de mercado automático
+- Portfolio y trades recientes
+- Panel de trading rápido
 
-### Análisis Técnico
-El bot utiliza múltiples indicadores:
+**Configuración de Riesgo (`/risk-config`):**
+- Límites de pérdida/ganancia diaria
+- Tamaños máximos de posición
+- Control de drawdown
+- Circuit breakers
+- Configuraciones predefinidas
 
-- **RSI (14)**: Sobrecompra/sobreventa
-- **MACD**: Momentum y divergencias
-- **Bollinger Bands**: Volatilidad y niveles
-- **Medias Móviles**: Tendencias (SMA 10, 20, 50)
-- **Oscilador Estocástico**: Momentum
-- **Volumen**: Confirmación de movimientos
+**Comandos Personalizados (`/commands`):**
+- Crear comandos con regex
+- Plantillas predefinidas
+- Editor visual de comandos
+- Pruebas de comandos
 
-### Evaluación de Oportunidades
-Cada oportunidad se evalúa con un score de 0-10 basado en:
+**Análisis Avanzado (`/analytics`):**
+- Métricas de rendimiento
+- Gráficos interactivos
+- Backtesting de estrategias
+- Reportes detallados
 
-- **30%** - Score técnico de indicadores
-- **25%** - Confianza de la IA
-- **15%** - Volumen de trading
-- **15%** - Volatilidad óptima
-- **15%** - Relación riesgo/recompensa
+## ⚙️ Configuración de Riesgo
 
-### Gestión de Riesgo
+### Configuraciones Predefinidas
 
-#### Límites Diarios
-- Máximo 10 trades por día
-- Pérdida máxima diaria: $2,000
-- Una posición por símbolo
+**Conservador:**
+- Pérdida máxima diaria: 2%
+- Ganancia objetivo: 8%
+- Máximo por posición: 5%
+- Drawdown máximo: 5%
 
-#### Stop Loss Automático
-- Monitoreo continuo de posiciones
-- Ejecución automática de stop loss
-- Take profit automático
+**Moderado (Por defecto):**
+- Pérdida máxima diaria: 5%
+- Ganancia objetivo: 15%
+- Máximo por posición: 10%
+- Drawdown máximo: 10%
 
-#### Gestión de Capital
-- Máximo 2% del capital por trade
-- Ajuste basado en confianza del análisis
-- Mínimo $10 por trade
+**Agresivo:**
+- Pérdida máxima diaria: 10%
+- Ganancia objetivo: 30%
+- Máximo por posición: 20%
+- Drawdown máximo: 20%
 
-## 🧠 Integración con IA
+### Parámetros Personalizables
 
-### Groq (LLaMA 3)
-```python
-# El bot consulta automáticamente a Groq para:
-- Análisis de mercado
-- Recomendaciones de trading
-- Evaluación de riesgo/recompensa
-- Sentimiento del mercado
-```
+- **Límites diarios**: Pérdida/ganancia máxima, número de trades
+- **Límites de posición**: Tamaño máximo, riesgo por trade
+- **Control de drawdown**: Límites de caída y pérdidas consecutivas
+- **Horarios de trading**: Inicio/fin, fines de semana
+- **Circuit breakers**: Volatilidad, crash de mercado
 
-### Ollama (Local)
-```python
-# Modelo local para:
-- Análisis sin límites de API
-- Mayor privacidad
-- Disponibilidad 24/7
-```
+## 🔒 Seguridad
 
-### Sistema de Respaldo
-Si los LLMs no están disponibles, el bot usa:
-- Análisis basado en reglas
-- Lógica de indicadores técnicos
-- Gestión de riesgo conservadora
+### Mejores Prácticas
 
-## 📊 Monitoreo y Estadísticas
+1. **Usa siempre Testnet** para pruebas
+2. **Nunca compartas** tus API keys
+3. **Configura límites conservadores** al inicio
+4. **Monitorea constantemente** el bot
+5. **Ten un plan de salida** claro
 
-### Métricas en Tiempo Real
-- P&L diario y semanal
-- Número de trades ejecutados
-- Posiciones activas
-- Progreso hacia objetivo semanal
+### Medidas de Seguridad Implementadas
 
-### Base de Datos
-El bot almacena:
-- Historial completo de trades
-- Análisis técnicos históricos
-- Configuraciones del bot
-- Estadísticas de rendimiento
+- **Circuit breakers automáticos**
+- **Límites de riesgo estrictos**
+- **Validación de todas las operaciones**
+- **Logs detallados de actividad**
+- **Emergency stop manual**
 
-### Reportes Automáticos
-- Resumen después de cada trade
-- Reporte diario a las 8:00 AM
-- Limpieza automática de datos antiguos
+## 📊 Métricas y Análisis
 
-## ⚙️ Configuración Avanzada
+### Indicadores Técnicos
+- **RSI**: Relative Strength Index
+- **MACD**: Moving Average Convergence Divergence
+- **Bollinger Bands**: Bandas de volatilidad
+- **SMA/EMA**: Medias móviles simples y exponenciales
+- **Stochastic**: Oscilador estocástico
 
-### Parámetros de Trading
-```env
-TARGET_WEEKLY_RETURN=0.30      # 30% objetivo semanal
-MAX_RISK_PER_TRADE=0.02        # 2% máximo por trade
-STOP_LOSS_PERCENTAGE=0.05      # 5% stop loss
-TAKE_PROFIT_PERCENTAGE=0.10    # 10% take profit
-```
+### Métricas de Riesgo
+- **VaR**: Value at Risk (1 día, 95% confianza)
+- **Sharpe Ratio**: Rendimiento ajustado por riesgo
+- **Drawdown**: Pérdida máxima desde el pico
+- **Win Rate**: Porcentaje de trades ganadores
+- **Profit Factor**: Ratio ganancia/pérdida
 
-### Símbolos de Trading
-El bot opera con las principales criptomonedas:
-- BTCUSDT, ETHUSDT, BNBUSDT
-- ADAUSDT, SOLUSDT, XRPUSDT
-- DOTUSDT, LINKUSDT, LTCUSDT, BCHUSDT
+## 🚨 Troubleshooting
 
-### Timeframes de Análisis
-- 1m, 5m, 15m (scalping)
-- 1h, 4h (swing trading)
-- 1d (análisis de tendencia)
+### Problemas Comunes
 
-## 🚨 Advertencias Importantes
+**Error de conexión a Binance:**
+- Verifica tus API keys
+- Asegúrate de usar Testnet para pruebas
+- Revisa las restricciones IP
 
-### ⚠️ Riesgos del Trading
-- **Alto Riesgo**: El trading de criptomonedas es extremadamente arriesgado
-- **Pérdidas**: Puedes perder todo tu capital
-- **Volatilidad**: Los precios pueden cambiar drásticamente
-- **No Garantías**: El objetivo del 30% semanal es ambicioso y no garantizado
+**Bot de Telegram no responde:**
+- Verifica el token del bot
+- Asegúrate de tener el Chat ID correcto
+- Revisa que el bot esté iniciado
 
-### 🧪 Recomendaciones
-1. **Usar Testnet**: Siempre prueba primero en testnet
-2. **Capital de Riesgo**: Solo invierte lo que puedes permitirte perder
-3. **Monitoreo**: Supervisa el bot regularmente
-4. **Backtesting**: Prueba estrategias con datos históricos
-5. **Educación**: Aprende sobre trading antes de usar el bot
+**Interfaz web no carga:**
+- Verifica que ngrok esté funcionando
+- Revisa los logs para errores
+- Intenta reiniciar el bot
 
-### 🔒 Seguridad
-- Nunca compartas tus API keys
-- Usa IP whitelisting en Binance
-- Mantén las dependencias actualizadas
-- Revisa los logs regularmente
+**Error de permisos en Colab:**
+- Asegúrate de tener los archivos en el directorio correcto
+- Verifica que las dependencias estén instaladas
+- Revisa los logs de error
 
-## 🛠️ Desarrollo
+### Logs y Debugging
 
-### Estructura del Proyecto
-```
-crypto-trading-bot/
-├── main.py                 # Archivo principal
-├── config/
-│   └── settings.py         # Configuración
-├── src/
-│   ├── telegram_bot.py     # Bot de Telegram
-│   ├── binance_client.py   # Cliente de Binance
-│   ├── market_analyzer.py  # Análisis técnico
-│   ├── llm_advisor.py      # Asesor con IA
-│   ├── trading_strategy.py # Estrategia de trading
-│   └── database.py         # Gestor de base de datos
-├── requirements.txt        # Dependencias
-├── .env.example           # Ejemplo de configuración
-└── README.md              # Esta documentación
-```
-
-### Agregar Nuevos Indicadores
-```python
-# En market_analyzer.py
-def calculate_new_indicator(self, df: pd.DataFrame) -> pd.Series:
-    # Tu lógica aquí
-    return indicator_values
-```
-
-### Modificar Estrategia
-```python
-# En trading_strategy.py
-async def _evaluate_opportunity(self, symbol: str, ...):
-    # Modifica la lógica de evaluación
-    pass
-```
-
-## 📈 Optimización para Hardware Limitado
-
-### Configuración Ligera
-```env
-# Reducir carga computacional
-MAX_DAILY_TRADES=5          # Menos trades
-ANALYSIS_INTERVAL=30        # Análisis cada 30 min
-TRADING_PAIRS=["BTCUSDT", "ETHUSDT"]  # Solo principales
-```
-
-### Uso de Memoria
-- Base de datos SQLite (ligera)
-- Limpieza automática de datos
-- Análisis por lotes eficiente
-
-### CPU Optimizado
-- Análisis asíncrono
-- Cache de indicadores
-- Procesamiento paralelo limitado
+Los logs se guardan en:
+- `trading_bot.log` - Logs principales
+- Consola de Colab - Output en tiempo real
+- Interfaz web - Estado y errores
 
 ## 🤝 Contribuciones
 
-### Reportar Bugs
-1. Crear issue en GitHub
-2. Incluir logs de error
-3. Describir pasos para reproducir
+¡Las contribuciones son bienvenidas! Por favor:
 
-### Nuevas Características
-1. Fork del repositorio
-2. Crear branch para feature
-3. Hacer pull request
+1. Fork el repositorio
+2. Crea una rama para tu feature
+3. Commit tus cambios
+4. Push a la rama
+5. Abre un Pull Request
 
-### Mejoras Sugeridas
-- [ ] Más indicadores técnicos
-- [ ] Backtesting automático
-- [ ] Dashboard web
-- [ ] Alertas por email
-- [ ] Soporte para más exchanges
+## ⚠️ Disclaimer
+
+**ADVERTENCIA IMPORTANTE:**
+
+Este bot es para fines educativos y experimentales. El trading de criptomonedas conlleva riesgos significativos:
+
+- ❌ **Nunca inviertas más de lo que puedes permitirte perder**
+- ❌ **Los resultados pasados no garantizan resultados futuros**
+- ❌ **Usa siempre Testnet para pruebas**
+- ❌ **El autor no se hace responsable de pérdidas financieras**
+
+**Usa este bot bajo tu propia responsabilidad.**
 
 ## 📄 Licencia
 
-Este proyecto es de código abierto. Úsalo bajo tu propia responsabilidad.
+Este proyecto está licenciado bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
 
-## 💬 Soporte
+## 🙏 Agradecimientos
 
-- **Issues**: GitHub Issues
-- **Documentación**: Este README
-- **Logs**: Revisa `trading_bot.log`
-
----
-
-## ⚡ Inicio Rápido
-
-```bash
-# 1. Configurar
-cp .env.example .env
-# Editar .env con tus credenciales
-
-# 2. Instalar
-pip install -r requirements.txt
-
-# 3. Ejecutar
-python main.py
-```
-
-¡Listo! Tu bot de trading está funcionando. 🚀
+- [python-binance](https://github.com/sammchardy/python-binance) - Cliente de Binance
+- [python-telegram-bot](https://github.com/python-telegram-bot/python-telegram-bot) - Bot de Telegram
+- [TA-Lib](https://github.com/mrjbq7/ta-lib) - Análisis técnico
+- [Flask](https://flask.palletsprojects.com/) - Framework web
+- [Bootstrap](https://getbootstrap.com/) - UI Framework
 
 ---
 
-**Disclaimer**: Este bot es para fines educativos. El trading de criptomonedas conlleva riesgos significativos. Nunca inviertas más de lo que puedes permitirte perder.
+**¡Happy Trading! 🚀📈**
